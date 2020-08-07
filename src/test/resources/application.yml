@@ -1,0 +1,77 @@
+camel:
+  health:
+    enabled: true
+    routes-enabled: true
+  springboot:
+    main-run-controller: true
+
+spring:
+  application:
+    name: iroha-balancer
+  jmx:
+    enabled: false
+  main:
+    allow-bean-definition-overriding: true
+  task:
+    execution:
+      thread-name-prefix: itps-task-
+      pool:
+        core-size: 2
+        max-size: 50
+        queue-capacity: 10000
+    scheduling:
+      thread-name-prefix: iroha-balancer-scheduling-
+      pool:
+        size: 2
+  rabbitmq:
+    host: ${camel.component.rabbitmq.hostname}
+    port: ${camel.component.rabbitmq.port-number}
+    username: ${camel.component.rabbitmq.username}
+    password: ${camel.component.rabbitmq.password}
+
+management:
+  endpoints:
+    web:
+      base-path: /management
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+  info:
+    git:
+      mode: full
+  health:
+    rabbit:
+      enabled: true
+    mail:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 60
+    enable:
+      http: true
+      jvm: true
+      logback: true
+      process: true
+      system: true
+    distribution:
+      percentiles-histogram:
+        all: true
+      percentiles:
+        all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
+    tags:
+      application: ${spring.application.name}
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+
+iroha:
+  peers: 127.0.0.1:50051,127.0.0.1:50052,127.0.0.1:50053,127.0.0.1:50054,127.0.0.1:50055
+logging:
+  level:
+    jp.co.soramitsu.iroha: ERROR

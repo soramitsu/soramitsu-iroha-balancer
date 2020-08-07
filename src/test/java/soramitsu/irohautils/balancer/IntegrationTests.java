@@ -1,6 +1,7 @@
 package soramitsu.irohautils.balancer;
 
 import com.codahale.metrics.Counter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import iroha.protocol.Endpoint;
 import iroha.protocol.TransactionOuterClass;
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3;
@@ -22,6 +23,7 @@ import soramitsu.irohautils.balancer.service.IrohaService;
 import javax.xml.bind.DatatypeConverter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
 
@@ -40,7 +42,7 @@ public class IntegrationTests {
             "rabbitmq:iroha-balancer?exchangeType=topic&durable=true&autoDelete=false&skipQueueDeclare=true";
 
     public static final String TORII_ROUTING_KEY = "torii";
-    public static final String LIST_TORII_ROUTING_KEY = "listTorii";
+    public static final String LIST_TORII_ROUTING_KEY = "list-torii";
     public static final Ed25519Sha3 crypto = new Ed25519Sha3();
 
     @Autowired
@@ -49,7 +51,8 @@ public class IntegrationTests {
     private ProducerTemplate producerTemplate;
     @Autowired
     private CamelContext camelContext;
-
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Order(10)
     @Test
@@ -79,6 +82,38 @@ public class IntegrationTests {
         metrics.values().forEach(metric ->
                 Assertions.assertTrue(metric.getCount() > (totalTx * .9)/irohaService.getIrohaPeers().size()));
 
+    }
+
+    @Order(20)
+    @Test
+    @Timeout(30)
+    void batchTransactionTest() throws Exception {
+        Transaction transaction1 = Transaction.builder(defaultAccountId)
+                .createAsset("usd", defaultDomainName, 2)
+                .build();
+        Transaction transaction2 = Transaction.builder(defaultAccountId)
+                .addAssetQuantity("usd#" + defaultDomainName, "1000")
+                .build();
+        List<String> hashes = Arrays.asList(DatatypeConverter.printHexBinary(Utils.reducedHash(transaction1)),
+                DatatypeConverter.printHexBinary(Utils.reducedHash(transaction2)));
+        TransactionOuterClass.Transaction tx1 = transaction1.makeMutable()
+                .setBatchMeta(TransactionOuterClass.Transaction.Payload.BatchMeta.BatchType.ATOMIC, hashes)
+                .build()
+                .sign(defaultKeyPair)
+                .build();
+        TransactionOuterClass.Transaction tx2 = transaction2.makeMutable()
+                .setBatchMeta(TransactionOuterClass.Transaction.Payload.BatchMeta.BatchType.ATOMIC, hashes)
+                .build()
+                .sign(defaultKeyPair)
+                .build();
+        byte[][] txs = new byte[][]{tx1.toByteArray(), tx2.toByteArray()};
+
+        producerTemplate.send(RABBITMQ_TRANSACTIONS_PRODUCER, exchange -> {
+            exchange.getMessage().setBody(objectMapper.writeValueAsString(txs));
+            exchange.getMessage().setHeader(RabbitMQConstants.ROUTING_KEY, LIST_TORII_ROUTING_KEY);
+        });
+        checkCommitted(Utils.toHexHash(tx1));
+        checkCommitted(Utils.toHexHash(tx2));
     }
 
 

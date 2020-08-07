@@ -22,5 +22,16 @@ listTorii - send json array with byte arrays or String base64 bytes of transacit
 
 ```
 
+# Environment variables
+
+```yaml
+camel settings:
+      - CAMEL_COMPONENT_RABBITMQ_HOSTNAME=${LOCAL_RABBITMQ_HOST:?LOCAL_RABBITMQ_HOST is not defined}
+      - CAMEL_COMPONENT_RABBITMQ_PORT_NUMBER=${LOCAL_RABBITMQ_PORT:?LOCAL_RABBITMQ_PORT is not defined}
+      - CAMEL_COMPONENT_RABBITMQ_USERNAME=${LOCAL_RABBITMQ_USERNAME:?LOCAL_RABBITMQ_USERNAME is not defined}
+      - CAMEL_COMPONENT_RABBITMQ_PASSWORD=${LOCAL_RABBITMQ_PASSWORD:?LOCAL_RABBITMQ_PASSWORD is not defined}
+
+```
+
 
 
