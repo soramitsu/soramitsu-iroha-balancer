@@ -18,7 +18,7 @@ Used routing keys:
 ```yaml
 torii - send byte array with transaction that shall be balanced to torii method  
 
-listTorii - send json array with byte arrays or String base64 bytes of transaciton list that shall be balanced to listTorii method 
+list-torii - send json array with byte arrays or String base64 bytes of transaciton list that shall be balanced to listTorii method 
 
 ```
 
