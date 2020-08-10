@@ -89,7 +89,7 @@ public class IrohaBalancerRoute extends RouteBuilder {
                     exchange.getMessage().setBody(txList);
                 })
                 .loadBalance()
-                .failover(irohaService.getIrohaPeers().size(), false, true, true, Throwable.class)
+                .failover(irohaService.getIrohaPeers().size(), false, true, false, Throwable.class)
                 .to(listToriiUris)
                 .end()
                 .to("mock:listToriiUris");

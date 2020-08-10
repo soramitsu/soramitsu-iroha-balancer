@@ -23,11 +23,6 @@ spring:
       thread-name-prefix: iroha-balancer-scheduling-
       pool:
         size: 2
-  rabbitmq:
-    host: ${camel.component.rabbitmq.hostname}
-    port: ${camel.component.rabbitmq.port-number}
-    username: ${camel.component.rabbitmq.username}
-    password: ${camel.component.rabbitmq.password}
 
 management:
   endpoints:
