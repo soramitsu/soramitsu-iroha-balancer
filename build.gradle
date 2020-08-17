@@ -8,7 +8,6 @@ buildscript {
 		maven { url "https://repo.spring.io/plugins-release" }
 		maven { url "https://plugins.gradle.org/m2/" }
 	}
-
 	allprojects {
 		repositories {
 			jcenter()
@@ -17,18 +16,17 @@ buildscript {
 	}
 
 	dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin"
-        classpath "io.spring.gradle:propdeps-plugin:0.0.10.RELEASE"
-        classpath "gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:1.5.1"
-        classpath "javax.activation:javax.activation-api:1.2.0"
-    }
+		classpath "org.springframework.boot:spring-boot-gradle-plugin"
+		classpath "io.spring.gradle:propdeps-plugin:0.0.10.RELEASE"
+		classpath "gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:1.5.1"
+		classpath "javax.activation:javax.activation-api:1.2.0"
+	}
 }
 
 plugins {
+	id 'java'
 	id 'org.springframework.boot' version '2.3.2.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-	id 'java'
-	id 'application'
 }
 
 allprojects {
@@ -51,6 +49,17 @@ subprojects {
 
 	repositories {
 		mavenCentral()
+	}
+
+	ext {
+		set('springCloudVersion', "Hoxton.SR6")
+	}
+
+
+	dependencyManagement {
+		imports {
+			mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+		}
 	}
 
 	test {

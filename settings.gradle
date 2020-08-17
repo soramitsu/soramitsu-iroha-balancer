@@ -1,1 +1,3 @@
 rootProject.name = 'iroha-balancer'
+include 'iroha-balancer-core'
+include 'iroha-balancer-client'
