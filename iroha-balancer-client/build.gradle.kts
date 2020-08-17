@@ -9,6 +9,7 @@ plugins {
 }
 
 val camelVersion = "2.23.2"
+val irohaJavaVersion = "6.2.0"
 
 dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
@@ -37,9 +38,8 @@ dependencies {
     // Jackson
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.+")
 
-    implementation("javax.servlet:javax.servlet-api:3.1.0")
-
-    // TODO: Add Camel related dependencies
+    // Iroha java library
+    implementation("com.github.hyperledger.iroha-java:client:${irohaJavaVersion}")
 
 }
 

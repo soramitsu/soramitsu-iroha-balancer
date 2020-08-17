@@ -1,4 +1,4 @@
-package soramitsu.irohautils.balancer.client
+package soramitsu.irohautils.balancer.client.config
 
 data class RMQConfig (
         val host: String,
