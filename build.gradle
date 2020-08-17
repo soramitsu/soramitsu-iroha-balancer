@@ -1,70 +1,64 @@
+buildscript {
+
+	repositories {
+		mavenLocal()
+		mavenCentral()
+		jcenter()
+		gradlePluginPortal()
+		maven { url "https://repo.spring.io/plugins-release" }
+		maven { url "https://plugins.gradle.org/m2/" }
+	}
+
+	allprojects {
+		repositories {
+			jcenter()
+			maven { url "https://jitpack.io" }
+		}
+	}
+
+	dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin"
+        classpath "io.spring.gradle:propdeps-plugin:0.0.10.RELEASE"
+        classpath "gradle.plugin.com.gorylenko.gradle-git-properties:gradle-git-properties:1.5.1"
+        classpath "javax.activation:javax.activation-api:1.2.0"
+    }
+}
+
 plugins {
 	id 'org.springframework.boot' version '2.3.2.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 	id 'java'
 	id 'application'
-	id "jp.co.soramitsu.sora-plugin" version "0.3.0"
 }
 
-group = 'soramitsu.iroha-utils'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
-
-repositories {
-	mavenCentral()
-}
 allprojects {
+	group = 'soramitsu.iroha-utils'
+	version = '0.0.1-SNAPSHOT'
+	sourceCompatibility = '11'
+}
+
+subprojects {
+	apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'java-library'
+
+	configurations {
+		compileOnly {
+			extendsFrom annotationProcessor
+		}
+		all*.exclude module: 'slf4j-simple'
+	}
+
 	repositories {
-		jcenter()
-		maven { url "https://jitpack.io" }
+		mavenCentral()
+	}
+
+	test {
+		useJUnitPlatform()
 	}
 }
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation "org.apache.camel.springboot:camel-spring-boot-starter:${sb_camel_starter_version}"
-	implementation "org.apache.camel.springboot:camel-grpc-starter:${sb_camel_starter_version}"
-	implementation "org.apache.camel.springboot:camel-jackson-starter:${sb_camel_starter_version}"
-	implementation "org.apache.camel.springboot:camel-rabbitmq-starter:${sb_camel_starter_version}"
-	implementation "org.apache.camel.springboot:camel-metrics-starter:${sb_camel_starter_version}"
 
-	implementation 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testAnnotationProcessor 'org.projectlombok:lombok'
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-	}
-	testImplementation 'org.springframework.amqp:spring-rabbit-test'
-	//testcontainers
-	testImplementation "org.testcontainers:junit-jupiter:${test_containers_version}"
-	//Iroha libs
-	implementation "com.github.hyperledger.iroha-java:client:${iroha_java_version}"
-	testCompile("com.github.hyperledger.iroha-java:testcontainers:${iroha_java_version}") {
-		exclude module: 'slf4j-simple'
-	}
-	testCompile group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.12.2'
-
+bootJar {
+	enabled = false
 }
 
-test {
-	useJUnitPlatform()
-}
-mainClassName = "soramitsu.irohautils.balancer.IrohaBalancerApplication"
-soramitsu {
-
-	projectGroup = 'irohautils'
-
-	docker {
-		// docker tag
-		tag = System.getenv("DOCKER_TAG")
-		// jar file that is used in the generated Dockerfile
-		jar = new File("build/libs/${project.name}-${project.version}.jar")
-	}
-}
