@@ -4,9 +4,10 @@ plugins {
 	id 'java'
 	id 'application'
 	id "jp.co.soramitsu.sora-plugin" version "0.3.0"
+	id "org.sonarqube"
 }
 
-group = 'soramitsu.iroha-utils'
+group = 'soramitsu'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
@@ -59,7 +60,7 @@ test {
 mainClassName = "soramitsu.irohautils.balancer.IrohaBalancerApplication"
 soramitsu {
 
-	projectGroup = 'irohautils'
+	projectGroup = 'soramitsu'
 
 	docker {
 		// docker tag
