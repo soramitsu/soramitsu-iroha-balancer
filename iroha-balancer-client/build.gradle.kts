@@ -13,6 +13,10 @@ val irohaJavaVersion = "6.2.0"
 
 dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
+    implementation("org.springframework.boot:spring-boot-devtools")
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -24,12 +28,8 @@ dependencies {
     // Apache Commons
     implementation("org.apache.commons:commons-collections4:4.4")
 
-    // Apache Camel
-    implementation("org.apache.camel:camel-spring-boot-starter:$camelVersion")
-    implementation("org.apache.camel:camel-rabbitmq-starter:$camelVersion")
-    implementation("org.apache.camel:camel-jackson-starter:$camelVersion")
-    implementation("org.apache.camel:camel-bean-validator-starter:$camelVersion")
-    testCompile("org.apache.camel:camel-test-spring:$camelVersion")
+    // RabbitMQ
+    implementation("com.rabbitmq:amqp-client:5.9.0")
 
     // testcontainers
     testCompile("org.testcontainers:testcontainers:1.14.3")

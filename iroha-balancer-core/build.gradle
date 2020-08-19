@@ -17,7 +17,6 @@ dependencies {
 	implementation "org.apache.camel.springboot:camel-jackson-starter:${sb_camel_starter_version}"
 	implementation "org.apache.camel.springboot:camel-rabbitmq-starter:${sb_camel_starter_version}"
 	implementation "org.apache.camel.springboot:camel-metrics-starter:${sb_camel_starter_version}"
-	compile "org.springframework.boot:spring-boot-devtools"
 	implementation 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
@@ -33,6 +32,7 @@ dependencies {
 		exclude module: 'slf4j-simple'
 	}
 	testCompile group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.12.2'
+	compile "org.testcontainers:testcontainers:${test_containers_version}"
 
 }
 
