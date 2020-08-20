@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService;
 
 @Configuration
 public class ApplicationConfiguration {
@@ -30,7 +31,4 @@ public class ApplicationConfiguration {
         }
         return irohaPeers;
     }
-
-
-
 }

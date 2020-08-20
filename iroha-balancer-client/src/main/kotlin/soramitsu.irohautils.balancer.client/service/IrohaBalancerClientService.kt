@@ -13,7 +13,6 @@ import kotlin.system.exitProcess
 
 private val logging = KotlinLogging.logger {  }
 
-@Service
 open class IrohaBalancerClientService @JvmOverloads constructor (
         val rmqConfig: RMQConfig,
         private val onRmqFail: () -> Unit = {
@@ -62,6 +61,7 @@ open class IrohaBalancerClientService @JvmOverloads constructor (
      * This function sends Iroha transaction to RMQ of Iroha balancer
      */
     fun balanceToTorii(transaction: TransactionOuterClass.Transaction) {
+        logging.info { "Submitting transaction to balancer" }
         channel.basicPublish(RABBITMQ_TRANSACTIONS_PRODUCER, TORII_ROUTING_KEY, null, transaction.toByteArray())
     }
 
@@ -72,6 +72,7 @@ open class IrohaBalancerClientService @JvmOverloads constructor (
         val byteListTorii: ArrayList<ByteArray> = ArrayList(transactions
                 .map { it.toByteArray() })
 
+        logging.info { "Submitting batch of transactions to balancer" }
         channel.basicPublish(
                 RABBITMQ_TRANSACTIONS_PRODUCER,
                 LIST_TORII_ROUTING_KEY,
