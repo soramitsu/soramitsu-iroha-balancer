@@ -6,7 +6,6 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.impl.DefaultExceptionHandler
 import iroha.protocol.TransactionOuterClass
 import mu.KotlinLogging
-import org.springframework.stereotype.Service
 import soramitsu.irohautils.balancer.client.config.RMQConfig
 import java.io.Closeable
 import kotlin.system.exitProcess
