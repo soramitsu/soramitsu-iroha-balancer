@@ -23,7 +23,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Logging
-    implementation("io.github.microutils:kotlin-logging:1.7.9")
+    api("io.github.microutils:kotlin-logging:1.7.9")
 
     // Apache Commons
     implementation("org.apache.commons:commons-collections4:4.4")

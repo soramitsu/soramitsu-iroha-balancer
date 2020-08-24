@@ -1,9 +1,23 @@
+buildscript {
+	ext.kotlin_version = '1.3.72'
+
+	repositories {
+		mavenCentral()
+		// gradle plugins repository
+		gradlePluginPortal()
+	}
+	dependencies {
+		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+	}
+}
+
 plugins {
     id "jp.co.soramitsu.sora-plugin" version "0.3.0"
 }
 
 apply plugin: 'application'
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'org.springframework.boot'
 
 dependencies {
@@ -26,6 +40,8 @@ dependencies {
 	testImplementation 'org.springframework.amqp:spring-rabbit-test'
 	//testcontainers
 	testImplementation "org.testcontainers:junit-jupiter:${test_containers_version}"
+	//Kotlin
+	testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 	//Iroha libs
 	implementation "com.github.hyperledger.iroha-java:client:${iroha_java_version}"
 	testCompile("com.github.hyperledger.iroha-java:testcontainers:${iroha_java_version}") {

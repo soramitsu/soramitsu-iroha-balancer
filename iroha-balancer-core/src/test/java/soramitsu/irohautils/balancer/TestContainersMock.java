@@ -1,10 +1,12 @@
 package soramitsu.irohautils.balancer;
 
 import jp.co.soramitsu.iroha.testcontainers.network.IrohaNetwork;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.containers.GenericContainer;
+import soramitsu.irohautils.balancer.client.config.RMQConfig;
 
 import java.util.stream.Collectors;
 
@@ -15,10 +17,17 @@ public class TestContainersMock {
             .withExposedPorts(5672);
     public static IrohaNetwork network = new IrohaNetwork(5)
             .addDefaultTransaction();
+    public static RMQConfig rmqConfig = null;
 
     static {
         if (!rabbitmq.isRunning()) {
             rabbitmq.start();
+            rmqConfig = new RMQConfig(
+                    rabbitmq.getHost(),
+                    rabbitmq.getMappedPort(5672),
+                    "guest",
+                    "guest"
+            );
         }
 
         try {
@@ -30,17 +39,15 @@ public class TestContainersMock {
 
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-
+        public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
             TestPropertyValues values = TestPropertyValues.of(
                     "camel.component.rabbitmq.hostname=" + rabbitmq.getContainerIpAddress(),
                     "camel.component.rabbitmq.port-number=" + rabbitmq.getMappedPort(5672),
-                    "iroha.peers=" + network.getApis().stream()
-                            .map(peer -> peer.getUri().getHost() + ":" + peer.getUri().getPort())
+                    "iroha.peers=" + network.getToriiAddresses().stream()
+                            .map(address -> address.getHost() + ":" + address.getPort())
                             .collect(Collectors.joining(","))
             );
             values.applyTo(configurableApplicationContext);
         }
     }
-
 }
