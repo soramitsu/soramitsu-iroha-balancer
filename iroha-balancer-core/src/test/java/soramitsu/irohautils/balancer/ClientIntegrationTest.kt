@@ -6,8 +6,8 @@ import jp.co.soramitsu.iroha.java.Utils
 import jp.co.soramitsu.iroha.testcontainers.detail.GenesisBlockBuilder
 import org.apache.camel.EndpointInject
 import org.apache.camel.component.mock.MockEndpoint
+import org.apache.camel.test.spring.junit5.CamelSpringTest
 import org.junit.ClassRule
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
@@ -24,6 +24,7 @@ import java.util.*
 import javax.xml.bind.DatatypeConverter
 
 @SpringBootTest
+@CamelSpringTest
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ContextConfiguration(initializers = [ClientIntegrationTest.Initializer::class])
