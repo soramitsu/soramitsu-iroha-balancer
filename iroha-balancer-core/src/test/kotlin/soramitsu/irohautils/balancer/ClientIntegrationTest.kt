@@ -1,86 +1,75 @@
 package soramitsu.irohautils.balancer
 
-import iroha.protocol.TransactionOuterClass
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.ConnectionFactory
+import com.rabbitmq.client.DefaultConsumer
+import com.rabbitmq.client.Envelope
 import jp.co.soramitsu.iroha.java.Transaction
-import jp.co.soramitsu.iroha.java.Utils
 import jp.co.soramitsu.iroha.testcontainers.detail.GenesisBlockBuilder
-import org.apache.camel.EndpointInject
-import org.apache.camel.component.mock.MockEndpoint
-import org.apache.camel.test.spring.junit5.CamelSpringTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.util.TestPropertyValues
-import org.springframework.context.ApplicationContextInitializer
-import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.testcontainers.containers.GenericContainer
-import soramitsu.irohautils.balancer.client.config.RMQConfig
+import soramitsu.irohautils.balancer.TestContainersMock.rmqConfig
 import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService
+import java.io.IOException
 import java.util.*
-import javax.xml.bind.DatatypeConverter
+
 
 @SpringBootTest
-//@CamelSpringTest
 @ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ContextConfiguration(initializers = [TestContainersMock.Initializer::class])
 class ClientIntegrationTest {
 
-//    companion object {
-//        @ClassRule
-//        val rabbitMq: RabbitMqContainer = RabbitMqContainer("rabbitmq:management")
-//                .withExposedPorts(5672)
-//
-//        fun runContainer() {
-//            rabbitMq.start()
-//        }
-//    }
+    private val factory = ConnectionFactory()
 
-    @EndpointInject(uri = "mock:toriiUris")
-    private val mockToriiUris: MockEndpoint? = null
+    private val connection by lazy {
+        factory.username = "guest"
+        factory.password = "guest"
 
-    @EndpointInject(uri = "mock:listToriiUris")
-    private val mockListToriiUris: MockEndpoint? = null
+        factory.host = rmqConfig.host
+        factory.port = rmqConfig.port
+        factory.newConnection()
+    }
+
+    private val channel by lazy { connection.createChannel() }
 
     @Test
     fun submitTrxViaClient() {
-//        val rmqConfig = RMQConfig(
-//            rabbitMq.host,
-//            rabbitMq.getMappedPort(5672),
-//            "guest",
-//            "guest"
-//        )
+        var messages: ArrayList<String> = ArrayList()
+        channel.basicConsume("torii", false, "",
+                object : DefaultConsumer(channel) {
+                    @Throws(IOException::class)
+                    override fun handleDelivery(consumerTag: String?,
+                                                envelope: Envelope,
+                                                properties: AMQP.BasicProperties?,
+                                                body: ByteArray?) {
+                        val deliveryTag = envelope.deliveryTag
+                        messages.add(body.toString())
+                        channel.basicAck(deliveryTag, false)
+                    }
+                })
 
-        val client = IrohaBalancerClientService(TestContainersMock.rmqConfig)
+        val client = IrohaBalancerClientService(rmqConfig)
         val transaction = Transaction.builder(GenesisBlockBuilder.defaultAccountId)
                 .addAssetQuantity("usd#" + GenesisBlockBuilder.defaultDomainName, "1000")
                 .sign(GenesisBlockBuilder.defaultKeyPair)
                 .build()
         client.balanceToTorii(transaction)
 
-        mockToriiUris?.expectedMessageCount(1)
-        mockToriiUris?.assertPeriod = 1000
-        mockToriiUris?.assertIsSatisfied()
-        mockToriiUris?.reset()
+        Thread.sleep(10000)
+        println(messages)
     }
 
     @Test
     fun submitBatchTrxViaClient() {
 
     }
-
-//    class Initializer: ApplicationContextInitializer<ConfigurableApplicationContext> {
-//        override fun initialize(applicationContext: ConfigurableApplicationContext) {
-//            runContainer()
-//            TestPropertyValues.of(
-//                    "camel.component.rabbitmq.hostname=${rabbitMq.host}",
-//                    "camel.component.rabbitmq.port-number=${rabbitMq.getMappedPort(5672)}"
-//            ).applyTo(applicationContext.environment)
-//        }
-//    }
 }
 
 class RabbitMqContainer(imageName: String): GenericContainer<RabbitMqContainer>(imageName)
