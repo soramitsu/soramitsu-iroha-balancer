@@ -5,5 +5,4 @@ data class RMQConfig (
         val port: Int,
         val username: String? = null,
         val password: String? = null
-
 )
