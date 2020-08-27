@@ -64,7 +64,7 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
     }
 
     /**
-     * * This function sends list of Iroha transactions to RMQ of Iroha balancer
+     * This function sends list of Iroha transactions to RMQ of Iroha balancer
      */
     fun balanceToListTorii(transactions: List<TransactionOuterClass.Transaction>) {
         val byteListTorii: ArrayList<ByteArray> = ArrayList(transactions
