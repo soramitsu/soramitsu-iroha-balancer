@@ -1,6 +1,7 @@
 package soramitsu.irohautils.balancer.client.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.rabbitmq.client.BuiltinExchangeType
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.impl.DefaultExceptionHandler
@@ -48,7 +49,15 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
         factory.newConnection()
     }
 
-    private val channel by lazy { connection.createChannel() }
+    private val channel = connection.createChannel()
+
+    init {
+        channel.exchangeDeclare(IROHA_BALANCER_EXCHANGER_NAME, BuiltinExchangeType.TOPIC, true, false, emptyMap())
+        channel.queueDeclare(TORII_QUEUE_NAME, true, false, false, emptyMap())
+        channel.queueDeclare(LIST_TORII_QUEUE_NAME, true, false, false, emptyMap())
+        channel.queueBind(TORII_QUEUE_NAME, IROHA_BALANCER_EXCHANGER_NAME, TORII_QUEUE_NAME)
+        channel.queueBind(LIST_TORII_QUEUE_NAME, IROHA_BALANCER_EXCHANGER_NAME, LIST_TORII_QUEUE_NAME)
+    }
 
     /**
      * This function sends Iroha transaction to RMQ of Iroha balancer
@@ -56,8 +65,8 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
     fun balanceToTorii(transaction: TransactionOuterClass.Transaction) {
         logger.info { "Submitting transaction to balancer: ${Utils.toHexHash(transaction)}" }
         channel.basicPublish(
-                "",
-                RABBITMQ_TRANSACTIONS_PRODUCER_TORII,
+                IROHA_BALANCER_EXCHANGER_NAME,
+                TORII_QUEUE_NAME,
                 null,
                 transaction.toByteArray()
         )
@@ -72,20 +81,20 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
 
         logger.info { "Submitting batch of transactions to balancer" }
         channel.basicPublish(
-                "",
-                RABBITMQ_TRANSACTIONS_PRODUCER_LIST_TORII,
+                IROHA_BALANCER_EXCHANGER_NAME,
+                LIST_TORII_QUEUE_NAME,
                 null,
                 objectMapper.writeValueAsBytes(byteListTorii))
     }
 
     override fun close() {
+        channel.close()
         connection.close()
     }
 
     companion object : KLogging() {
-        private const val AMQP_COMMON = "&exchangeType=topic&durable=true&autoDelete=false"
-
-        private const val RABBITMQ_TRANSACTIONS_PRODUCER_TORII = "rabbitmq:iroha-balancer?queue=torii&routingKey=torii$AMQP_COMMON"
-        private const val RABBITMQ_TRANSACTIONS_PRODUCER_LIST_TORII = "rabbitmq:iroha-balancer?queue=list-torii&routingKey=list-torii$AMQP_COMMON"
+        const val IROHA_BALANCER_EXCHANGER_NAME = "iroha-balancer"
+        const val TORII_QUEUE_NAME = "torii"
+        const val LIST_TORII_QUEUE_NAME = "list-torii"
     }
 }

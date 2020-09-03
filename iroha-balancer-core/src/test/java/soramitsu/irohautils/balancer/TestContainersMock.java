@@ -19,7 +19,7 @@ public class TestContainersMock {
             .addDefaultTransaction();
     public static RMQConfig rmqConfig = null;
 
-    static {
+    public static void start(){
         if (!rabbitmq.isRunning()) {
             rabbitmq.start();
             rmqConfig = new RMQConfig(
@@ -40,6 +40,7 @@ public class TestContainersMock {
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
+            TestContainersMock.start();
             TestPropertyValues values = TestPropertyValues.of(
                     "camel.component.rabbitmq.hostname=" + rabbitmq.getContainerIpAddress(),
                     "camel.component.rabbitmq.port-number=" + rabbitmq.getMappedPort(5672),

@@ -1,87 +1,99 @@
 package soramitsu.irohautils.balancer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
-import com.rabbitmq.client.DefaultConsumer
-import com.rabbitmq.client.Envelope
+import com.rabbitmq.client.Delivery
 import jp.co.soramitsu.iroha.java.Transaction
 import jp.co.soramitsu.iroha.testcontainers.detail.GenesisBlockBuilder
-import org.junit.Assert
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.testcontainers.containers.GenericContainer
-import soramitsu.irohautils.balancer.TestContainersMock.rabbitmq
-import soramitsu.irohautils.balancer.TestContainersMock.rmqConfig
+import soramitsu.irohautils.balancer.client.config.RMQConfig
 import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService
-import java.io.IOException
+import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService.Companion.TORII_QUEUE_NAME
 import java.util.*
 
-
-@SpringBootTest
-@ExtendWith(SpringExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ContextConfiguration(initializers = [TestContainersMock.Initializer::class])
 class ClientIntegrationTest {
+
+    private val rmq = RabbitMqContainer()
 
     private val factory = ConnectionFactory()
 
-    private val connection by lazy {
-        factory.username = "guest"
-        factory.password = "guest"
+    private lateinit var connection: Connection
 
-        factory.host = rmqConfig.host
-        factory.port = rmqConfig.port
-        factory.newConnection()
-    }
+    private lateinit var channel: Channel
 
-    private val channel by lazy { connection.createChannel() }
+    private lateinit var rmqConfig: RMQConfig
+
+    private lateinit var client: IrohaBalancerClientService
 
     @BeforeAll
-    fun init(){
-        channel.exchangeDeclare("iroha-balancer", "topic", true)
-        channel.queueDeclare("torii", true, false, false, null)
-        channel.queueBind("torii", "iroha-balancer", "torii")
+    fun startRmq() {
+        rmq.withExposedPorts(DEFAULT_RMQ_PORT).start()
+        rmqConfig = RMQConfig(
+                rmq.host,
+                rmq.getMappedPort(DEFAULT_RMQ_PORT),
+                DEFAULT_USER,
+                DEFAULT_PASSWORD
+        )
+        factory.username = rmqConfig.username
+        factory.password = rmqConfig.password
+        factory.host = rmqConfig.host
+        factory.port = rmqConfig.port
+
+        connection = factory.newConnection()
+
+        client = IrohaBalancerClientService(rmqConfig)
+    }
+
+    @BeforeEach
+    fun init() {
+        channel = connection.createChannel()
         channel.basicQos(1)
+    }
+
+    @AfterEach
+    fun closeChannel() {
+        channel.close()
+    }
+
+    @AfterAll
+    fun closeConnection() {
+        connection.close()
     }
 
     @Test
     fun submitTrxViaClient() {
-        var messages: ArrayList<String> = ArrayList()
-        channel.basicConsume("torii",
-                object : DefaultConsumer(channel) {
-                    @Throws(IOException::class)
-                    override fun handleDelivery(consumerTag: String?,
-                                                envelope: Envelope,
-                                                properties: AMQP.BasicProperties?,
-                                                body: ByteArray?) {
-                        val deliveryTag = envelope.deliveryTag
-                        println(consumerTag)
-                        messages.add(body.toString())
-                        channel.basicAck(deliveryTag, false)
-                    }
-                })
-
-        val client = IrohaBalancerClientService(rmqConfig)
+        val messages: ArrayList<String> = ArrayList()
+        channel.basicConsume(TORII_QUEUE_NAME, true,
+                { _: String, delivery: Delivery ->
+                    messages.add(String(delivery.body))
+                },
+                { _ -> }
+        )
         val transaction = Transaction.builder(GenesisBlockBuilder.defaultAccountId)
                 .addAssetQuantity("usd#" + GenesisBlockBuilder.defaultDomainName, "1000")
                 .sign(GenesisBlockBuilder.defaultKeyPair)
                 .build()
         client.balanceToTorii(transaction)
+
         Thread.sleep(5000)
 
-        Assert.assertTrue(messages.size > 0)
+        assertEquals(1, messages.size)
     }
 
     @Test
     fun submitBatchTrxViaClient() {
 
     }
+
+    companion object {
+        const val DEFAULT_RMQ_PORT = 5672
+        const val DEFAULT_USER = "guest"
+        const val DEFAULT_PASSWORD = DEFAULT_USER
+    }
 }
 
-class RabbitMqContainer(imageName: String): GenericContainer<RabbitMqContainer>(imageName)
+class RabbitMqContainer : GenericContainer<RabbitMqContainer>("rabbitmq:management")
