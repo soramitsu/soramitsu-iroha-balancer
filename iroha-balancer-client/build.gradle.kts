@@ -4,8 +4,8 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
     `java-library`
-    kotlin("jvm") version "1.3.72"
-    kotlin("kapt") version "1.3.72"
+    kotlin("jvm") // version "1.3.72"
+    kotlin("kapt") // version "1.3.72"
 }
 
 val camelVersion = "2.23.2"
