@@ -60,6 +60,11 @@ def MainClassName = "soramitsu.irohautils.balancer.IrohaBalancerApplication"
 
 mainClassName = MainClassName
 
+test {
+	useJUnitPlatform()
+	dependsOn "dockerfileCreate"
+}
+
 springBoot {
     mainClassName = MainClassName
     buildInfo()
