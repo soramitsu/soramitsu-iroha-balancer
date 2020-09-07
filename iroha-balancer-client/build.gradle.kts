@@ -5,19 +5,12 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 plugins {
     `java-library`
     kotlin("jvm") // version "1.3.72"
-    kotlin("kapt") // version "1.3.72"
 }
 
 val camelVersion = "2.23.2"
 val irohaJavaVersion = "6.2.0"
 
 dependencies {
-    kapt("org.springframework.boot:spring-boot-configuration-processor")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-amqp")
-    implementation("org.springframework.boot:spring-boot-devtools")
-
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
