@@ -1,6 +1,10 @@
 package soramitsu.iroha.balancer.integration_test
 
+import org.springframework.boot.autoconfigure.SpringBootApplication
 
-fun main(args:Array<String>){
+@SpringBootApplication
+open class IntegrationTestMain
+
+fun main(args: Array<String>) {
 
 }
