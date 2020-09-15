@@ -11,14 +11,17 @@ val camelVersion = "2.23.2"
 val irohaJavaVersion = "6.2.0"
 
 dependencies {
-    implementation(project(":iroha-balancer-core"))
+    api(project(":iroha-balancer-core"))
+    api(project(":iroha-balancer-client"))
+    testApi(project(":iroha-balancer-core").dependencyProject.sourceSets.test.get().output)
+
     // testcontainers
-    compile("org.testcontainers:testcontainers:1.14.3")
-    implementation("org.testcontainers:junit-jupiter:1.14.3")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testCompile("org.testcontainers:testcontainers:1.14.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.14.3")
+    testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     //Iroha libs
-    implementation("com.github.hyperledger.iroha-java:client:6.2.0")
+    testImplementation("com.github.hyperledger.iroha-java:client:6.2.0")
     testCompile("com.github.hyperledger.iroha-java:testcontainers:6.2.0")
 
     // Spring
@@ -40,8 +43,7 @@ tasks.withType<KotlinCompile> {
 
 tasks.test {
     useJUnitPlatform()
-    dependsOn(":iroha-balancer-core:dockerBuild")
-    dependsOn("dockerfileCreate")
+    dependsOn(":iroha-balancer-core:dockerfileCreate")
 }
 
 val jar: Jar by tasks

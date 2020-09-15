@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class IrohaBalancerRoute extends RouteBuilder {
 
-    public static final String AMQP_COMMON = "&exchangeType=topic&durable=true&autoDelete=false";
+    public static final String AMQP_COMMON = "&exchangeType=topic&durable=true&autoDelete=false&username=guest&password=guest&declare=true";
 
     public static final String RABBITMQ_BALANCE_TO_TORII = "rabbitmq:iroha-balancer?queue=torii&routingKey=torii" + AMQP_COMMON;
     public static final String RABBITMQ_BALANCE_TO_LIST_TORII = "rabbitmq:iroha-balancer?queue=list-torii&routingKey=list-torii" + AMQP_COMMON;
@@ -59,10 +59,11 @@ public class IrohaBalancerRoute extends RouteBuilder {
 
         from(RABBITMQ_BALANCE_TO_TORII).routeId("BalanceToTorii")
                 .process(exchange -> {
-                    log.debug("Received transaction to torii");
+                    log.info("Received transaction from torii");
                     byte[] body = (byte[]) exchange.getIn().getBody();
                     TransactionOuterClass.Transaction transaction = TransactionOuterClass.Transaction.parseFrom(body);
                     exchange.getMessage().setBody(transaction);
+                    log.debug("Going to send transaction: " + transaction);
                 })
                 .loadBalance()
                 .failover(irohaService.getIrohaPeers().size(), false, true, false, Throwable.class)
@@ -74,25 +75,24 @@ public class IrohaBalancerRoute extends RouteBuilder {
                 .unmarshal().json(JsonLibrary.Jackson, ByteArrayList.class)
                 .process(exchange -> {
                     ByteArrayList body = exchange.getIn().getBody(ByteArrayList.class);
-                    log.debug("Receive transactions to listTorii, size: {}", body.size());
+                    log.info("Received transactions from listTorii, size: {}", body.size());
                     List<TransactionOuterClass.Transaction> transactions =
                             body.stream().map(t -> {
                                 try {
                                     return TransactionOuterClass.Transaction.parseFrom(t);
                                 } catch (InvalidProtocolBufferException e) {
-                                    log.error("Error parsing transaction");
-                                    log.debug("Error parsing transaction", e);
+                                    log.error("Error parsing transaction", e);
                                     return TransactionOuterClass.Transaction.newBuilder().build();
                                 }
                             }).collect(Collectors.toList());
                     Endpoint.TxList txList = Endpoint.TxList.newBuilder().addAllTransactions(transactions).build();
                     exchange.getMessage().setBody(txList);
+                    log.debug("Going to send transactions: " + txList);
                 })
                 .loadBalance()
                 .failover(irohaService.getIrohaPeers().size(), false, true, false, Throwable.class)
                 .to(listToriiUris)
                 .end()
                 .to("mock:listToriiUris");
-
     }
 }

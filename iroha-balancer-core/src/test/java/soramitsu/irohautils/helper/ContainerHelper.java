@@ -1,10 +1,11 @@
-package soramitsu.irohautils.balancer.helper;
+package soramitsu.irohautils.helper;
+
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 
 public class ContainerHelper implements Closeable {
 

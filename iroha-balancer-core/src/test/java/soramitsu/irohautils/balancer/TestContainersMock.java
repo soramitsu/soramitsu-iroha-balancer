@@ -15,7 +15,7 @@ public class TestContainersMock {
 
     public static GenericContainer rabbitmq = new GenericContainer("rabbitmq:management")
             .withExposedPorts(5672);
-    public static IrohaNetwork network = new IrohaNetwork(5)
+    public static IrohaNetwork network = new IrohaNetwork(3)
             .addDefaultTransaction();
     public static RMQConfig rmqConfig = null;
 
@@ -23,7 +23,7 @@ public class TestContainersMock {
         if (!rabbitmq.isRunning()) {
             rabbitmq.start();
             rmqConfig = new RMQConfig(
-                    rabbitmq.getHost(),
+                    rabbitmq.getContainerIpAddress(),
                     rabbitmq.getMappedPort(5672),
                     "guest",
                     "guest"
@@ -37,16 +37,27 @@ public class TestContainersMock {
         }
     }
 
+    public static void stop(){
+        if(rabbitmq.isRunning()) {
+            rabbitmq.stop();
+        }
+        network.stop();
+    }
+
+    public static String getPeerAddresses() {
+        return network.getToriiAddresses().stream()
+                .map(address -> address.getHost() + ":" + address.getPort())
+                .collect(Collectors.joining(","));
+    }
+
     public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
         public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
             TestContainersMock.start();
             TestPropertyValues values = TestPropertyValues.of(
-                    "camel.component.rabbitmq.hostname=" + rabbitmq.getContainerIpAddress(),
-                    "camel.component.rabbitmq.port-number=" + rabbitmq.getMappedPort(5672),
-                    "iroha.peers=" + network.getToriiAddresses().stream()
-                            .map(address -> address.getHost() + ":" + address.getPort())
-                            .collect(Collectors.joining(","))
+                    "camel.component.rabbitmq.hostname=" + rmqConfig.getHost(),
+                    "camel.component.rabbitmq.port-number=" + rmqConfig.getPort(),
+                    "iroha.peers=" + getPeerAddresses()
             );
             values.applyTo(configurableApplicationContext);
         }

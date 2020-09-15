@@ -4,7 +4,6 @@ import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.Delivery
-import iroha.protocol.TransactionOuterClass
 import jp.co.soramitsu.iroha.java.Transaction
 import jp.co.soramitsu.iroha.java.Utils
 import jp.co.soramitsu.iroha.testcontainers.detail.GenesisBlockBuilder
@@ -16,7 +15,6 @@ import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService
 import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService.Companion.LIST_TORII_QUEUE_NAME
 import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService.Companion.TORII_QUEUE_NAME
 import java.util.*
-import javax.xml.bind.DatatypeConverter
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ClientIntegrationTest {
@@ -100,14 +98,14 @@ class ClientIntegrationTest {
 
         val transaction1 = Transaction.builder(GenesisBlockBuilder.defaultAccountId)
                 .createAsset("usd", GenesisBlockBuilder.defaultDomainName, 2)
-                .sign(GenesisBlockBuilder.defaultKeyPair)
+                .build()
                 .build()
         val transaction2 = Transaction.builder(GenesisBlockBuilder.defaultAccountId)
                 .addAssetQuantity("usd#" + GenesisBlockBuilder.defaultDomainName, "1000")
-                .sign(GenesisBlockBuilder.defaultKeyPair)
                 .build()
-        val listOfTransactions = arrayListOf<TransactionOuterClass.Transaction>(transaction1, transaction2)
-        client.balanceToListTorii(listOfTransactions)
+                .build()
+        val listOfTransactions = listOf(transaction1, transaction2)
+        client.balanceToListTorii(Utils.createTxAtomicBatch(listOfTransactions, GenesisBlockBuilder.defaultKeyPair))
 
         Thread.sleep(5000)
         assertEquals(1, messages.size)

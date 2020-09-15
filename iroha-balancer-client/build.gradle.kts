@@ -33,6 +33,8 @@ dependencies {
 
     // Iroha java library
     implementation("com.github.hyperledger.iroha-java:client:${irohaJavaVersion}")
+    testImplementation("com.github.hyperledger.iroha-java:client:${irohaJavaVersion}")
+    testImplementation("com.github.hyperledger.iroha-java:testcontainers:${irohaJavaVersion}")
 
 }
 
