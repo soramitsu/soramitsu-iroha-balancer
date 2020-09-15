@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.testcontainers.containers.wait.strategy.Wait
 import soramitsu.irohautils.balancer.TestContainersMock
 import soramitsu.irohautils.balancer.TestContainersMock.network
 import soramitsu.irohautils.balancer.TestContainersMock.rmqConfig
@@ -55,6 +56,7 @@ class IntegrationTests {
                 .withEnv("CAMEL_COMPONENT_RABBITMQ_USERNAME", "guest")
                 .withEnv("CAMEL_COMPONENT_RABBITMQ_PASSWORD", "guest")
                 .withEnv("IROHA_PEERS", TestContainersMock.getPeerAddresses())
+                .waitingFor(Wait.forLogMessage(".*Started IrohaBalancerApplication.*", 1))
                 .start()
 
         client = IrohaBalancerClientService(rmqConfig)
@@ -82,9 +84,10 @@ class IntegrationTests {
 
     private fun checkCommitted(transaction: TransactionOuterClass.Transaction, iroha: IrohaAPI) {
         val txStatus = subscriptionStrategy.subscribe(iroha, Utils.hash(transaction))
+                // timeout workaround
                 .takeUntil(
                         Observable.interval(
-                                5L,
+                                10L,
                                 1L,
                                 TimeUnit.SECONDS
                         )
