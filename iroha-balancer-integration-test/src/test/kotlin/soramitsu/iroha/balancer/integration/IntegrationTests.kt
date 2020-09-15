@@ -6,7 +6,8 @@ import iroha.protocol.TransactionOuterClass
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.iroha.java.IrohaAPI
 import jp.co.soramitsu.iroha.java.Transaction
-import jp.co.soramitsu.iroha.java.Utils.toHexHash
+import jp.co.soramitsu.iroha.java.Utils
+import jp.co.soramitsu.iroha.java.subscription.WaitForTerminalStatus
 import jp.co.soramitsu.iroha.testcontainers.detail.GenesisBlockBuilder.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -34,6 +35,13 @@ class IntegrationTests {
                     irohaBalancerCoreDockerfile
             )
 
+    private val subscriptionStrategy = WaitForTerminalStatus(
+            listOf(
+                    TxStatus.COMMITTED,
+                    TxStatus.REJECTED,
+                    TxStatus.UNRECOGNIZED
+            )
+    )
     private val crypto = Ed25519Sha3()
     private lateinit var client: IrohaBalancerClientService
 
@@ -69,11 +77,11 @@ class IntegrationTests {
         client.balanceToTorii(transaction)
 
         val iroha = IrohaAPI(network.toriiAddresses[0])
-        checkCommitted(toHexHash(transaction), iroha)
+        checkCommitted(transaction, iroha)
     }
 
-    private fun checkCommitted(trxHash1: String, iroha: IrohaAPI) {
-        val txStatus = iroha.txStatus(trxHash1.toByteArray())
+    private fun checkCommitted(transaction: TransactionOuterClass.Transaction, iroha: IrohaAPI) {
+        val txStatus = subscriptionStrategy.subscribe(iroha, Utils.hash(transaction))
                 .takeUntil(
                         Observable.interval(
                                 5L,
@@ -83,7 +91,6 @@ class IntegrationTests {
                 )
                 .blockingLast()
                 .txStatus
-        println("#####################$txStatus")
         assertEquals(TxStatus.COMMITTED, txStatus)
     }
 }
