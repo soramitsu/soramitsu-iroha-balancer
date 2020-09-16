@@ -91,7 +91,7 @@ class IntegrationTests {
                 .build()
 
         val transaction2: TransactionOuterClass.Transaction = Transaction.builder(defaultAccountId)
-                .addAssetQuantity("usd#$defaultDomainName", "1000")
+                .createAsset("khr", defaultDomainName, 0)
                 .build()
                 .sign(defaultKeyPair)
                 .build()
