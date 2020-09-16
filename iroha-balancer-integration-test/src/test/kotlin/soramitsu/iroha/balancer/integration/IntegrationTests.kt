@@ -70,7 +70,7 @@ class IntegrationTests {
     }
 
     @Test
-    fun dummy() {
+    fun createAccountTransactionTest() {
         val transaction: TransactionOuterClass.Transaction = Transaction.builder(defaultAccountId)
                 .createAccount("account_", defaultDomainName, crypto.generateKeypair().public)
                 .build()
@@ -80,6 +80,28 @@ class IntegrationTests {
 
         val iroha = IrohaAPI(network.toriiAddresses[0])
         checkCommitted(transaction, iroha)
+    }
+
+    @Test
+    fun batchTransactionTest() {
+        val transaction1: TransactionOuterClass.Transaction = Transaction.builder(defaultAccountId)
+                .createAsset("usd", defaultDomainName, 2)
+                .build()
+                .sign(defaultKeyPair)
+                .build()
+
+        val transaction2: TransactionOuterClass.Transaction = Transaction.builder(defaultAccountId)
+                .addAssetQuantity("usd#$defaultDomainName", "1000")
+                .build()
+                .sign(defaultKeyPair)
+                .build()
+        val transactions = listOf(transaction1, transaction2)
+
+        client.balanceToListTorii(transactions)
+
+        val iroha = IrohaAPI(network.toriiAddresses[0])
+        checkCommitted(transaction1, iroha)
+        checkCommitted(transaction2, iroha)
     }
 
     private fun checkCommitted(transaction: TransactionOuterClass.Transaction, iroha: IrohaAPI) {
