@@ -155,7 +155,7 @@ class ClientIntegrationTest {
         assertEquals(batchTx1.payload.reducedPayload.commandsCount, receivedTransaction1.payload.reducedPayload.commandsCount)
         assertEquals(batchTx1.payload.reducedPayload.createdTime, receivedTransaction1.payload.reducedPayload.createdTime)
         assertEquals(batchTx1.payload.reducedPayload.creatorAccountId, receivedTransaction1.payload.reducedPayload.creatorAccountId)
-        val receivedCommand1 = receivedTransaction2.payload.reducedPayload.commandsList[0]
+        val receivedCommand1 = receivedTransaction1.payload.reducedPayload.commandsList[0]
         val expectedCommand1 = batchTx1.payload.reducedPayload.commandsList[0]
         assertTrue(receivedCommand1.hasCreateAsset())
         assertEquals(expectedCommand1.createAsset.assetName, receivedCommand1.createAsset.assetName)
