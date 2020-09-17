@@ -160,7 +160,7 @@ class ClientIntegrationTest {
         assertTrue(receivedCommand1.hasCreateAsset())
         assertEquals(expectedCommand1.createAsset.assetName, receivedCommand1.createAsset.assetName)
         assertEquals(expectedCommand1.createAsset.domainId, receivedCommand1.createAsset.domainId)
-        assertEquals(expectedCommand1.createAsset.precision, receivedCommand1.addAssetQuantity.assetId)
+        assertEquals(expectedCommand1.createAsset.precision, receivedCommand1.createAsset.precision)
 
         assertEquals(batchTx2.payload.batch, receivedTransaction2.payload.batch)
         assertEquals(batchTx2.payload.reducedPayload.commandsCount, receivedTransaction2.payload.reducedPayload.commandsCount)
