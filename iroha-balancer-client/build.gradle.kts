@@ -27,6 +27,7 @@ dependencies {
     // testcontainers
     testCompile("org.testcontainers:testcontainers:1.14.3")
     testImplementation("org.testcontainers:junit-jupiter:1.14.3")
+    testCompile("org.junit.jupiter:junit-jupiter-engine:5.6.2")
 
     // Jackson
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.+")
@@ -40,8 +41,12 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 val jar: Jar by tasks
