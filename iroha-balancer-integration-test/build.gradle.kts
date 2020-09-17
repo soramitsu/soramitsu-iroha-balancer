@@ -23,15 +23,6 @@ dependencies {
     //Iroha libs
     testImplementation("com.github.hyperledger.iroha-java:client:6.2.0")
     testCompile("com.github.hyperledger.iroha-java:testcontainers:6.2.0")
-
-    // Spring
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    testImplementation("org.springframework.boot:spring-boot-starter-test") {
-        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
-        exclude(group = "com.vaadin.external.google", module = "android-json")
-    }
-
 }
 
 tasks.withType<KotlinCompile> {

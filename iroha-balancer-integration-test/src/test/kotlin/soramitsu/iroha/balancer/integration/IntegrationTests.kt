@@ -20,15 +20,17 @@ import soramitsu.irohautils.balancer.TestContainersMock.network
 import soramitsu.irohautils.balancer.TestContainersMock.rmqConfig
 import soramitsu.irohautils.balancer.client.service.IrohaBalancerClientService
 import soramitsu.irohautils.helper.ContainerHelper
+import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.xml.bind.DatatypeConverter
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IntegrationTests {
 
     private val containerHelper = ContainerHelper()
 
-    private val irohaBalancerCoreContextFolder = "${containerHelper.userDir}/../iroha-balancer-core/build/docker/"
-    private val irohaBalancerCoreDockerfile = "${containerHelper.userDir}/../iroha-balancer-core/build/docker/Dockerfile"
+    private val irohaBalancerCoreContextFolder = "${ContainerHelper.userDir}/../iroha-balancer-core/build/docker/"
+    private val irohaBalancerCoreDockerfile = "${ContainerHelper.userDir}/../iroha-balancer-core/build/docker/Dockerfile"
 
     private val irohaBalancerCoreContainer = containerHelper
             .createIrohaBalancerCoreContainer(
@@ -84,24 +86,35 @@ class IntegrationTests {
 
     @Test
     fun batchTransactionTest() {
-        val transaction1: TransactionOuterClass.Transaction = Transaction.builder(defaultAccountId)
+        val transaction1: Transaction = Transaction.builder(defaultAccountId)
                 .createAsset("usd", defaultDomainName, 2)
                 .build()
-                .sign(defaultKeyPair)
-                .build()
 
-        val transaction2: TransactionOuterClass.Transaction = Transaction.builder(defaultAccountId)
+        val transaction2: Transaction = Transaction.builder(defaultAccountId)
                 .createAsset("khr", defaultDomainName, 0)
                 .build()
+
+        val hashes = Arrays.asList(DatatypeConverter.printHexBinary(Utils.reducedHash(transaction1)),
+                DatatypeConverter.printHexBinary(Utils.reducedHash(transaction2)))
+
+        val tx1: TransactionOuterClass.Transaction = transaction1.makeMutable()
+                .setBatchMeta(TransactionOuterClass.Transaction.Payload.BatchMeta.BatchType.ATOMIC, hashes)
+                .build()
                 .sign(defaultKeyPair)
                 .build()
-        val transactions = listOf(transaction1, transaction2)
+        val tx2: TransactionOuterClass.Transaction = transaction2.makeMutable()
+                .setBatchMeta(TransactionOuterClass.Transaction.Payload.BatchMeta.BatchType.ATOMIC, hashes)
+                .build()
+                .sign(defaultKeyPair)
+                .build()
 
-        client.balanceToListTorii(transactions)
+        val batchTransactions = listOf(tx1, tx2)
+
+        client.balanceToListTorii(batchTransactions)
 
         val iroha = IrohaAPI(network.toriiAddresses[0])
-        checkCommitted(transaction1, iroha)
-        checkCommitted(transaction2, iroha)
+        checkCommitted(tx1, iroha)
+        checkCommitted(tx2, iroha)
     }
 
     private fun checkCommitted(transaction: TransactionOuterClass.Transaction, iroha: IrohaAPI) {

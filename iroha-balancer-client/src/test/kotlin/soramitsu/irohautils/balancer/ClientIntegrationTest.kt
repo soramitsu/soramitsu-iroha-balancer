@@ -1,9 +1,11 @@
 package soramitsu.irohautils.balancer
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.Delivery
+import iroha.protocol.TransactionOuterClass
 import jp.co.soramitsu.iroha.java.Transaction
 import jp.co.soramitsu.iroha.java.Utils
 import jp.co.soramitsu.iroha.testcontainers.detail.GenesisBlockBuilder
@@ -30,6 +32,8 @@ class ClientIntegrationTest {
     private lateinit var rmqConfig: RMQConfig
 
     private lateinit var client: IrohaBalancerClientService
+
+    private val objectMapper = ObjectMapper()
 
     @BeforeAll
     fun startRmq() {

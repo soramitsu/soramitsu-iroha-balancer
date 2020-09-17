@@ -7,9 +7,9 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 
-public class ContainerHelper implements Closeable {
+public class ContainerHelper {
 
-  public String userDir = System.getProperty("user.dir");
+  public static String userDir = System.getProperty("user.dir");
 
   public GenericContainer createIrohaBalancerCoreContainer(String contextFolder, String dockerFile) {
     return new GenericContainer(
@@ -27,10 +27,5 @@ public class ContainerHelper implements Closeable {
 
   public Boolean isServiceDead(GenericContainer serviceContainer) {
     return !serviceContainer.isRunning();
-  }
-
-  @Override
-  public void close() throws IOException {
-
   }
 }
