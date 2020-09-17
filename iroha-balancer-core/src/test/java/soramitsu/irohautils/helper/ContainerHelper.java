@@ -11,7 +11,7 @@ public class ContainerHelper {
 
   public static String userDir = System.getProperty("user.dir");
 
-  public GenericContainer createIrohaBalancerCoreContainer(String contextFolder, String dockerFile) {
+  public static GenericContainer createIrohaBalancerCoreContainer(String contextFolder, String dockerFile) {
     return new GenericContainer(
         new ImageFromDockerfile()
           .withFileFromFile("", new File(contextFolder))
@@ -21,11 +21,11 @@ public class ContainerHelper {
         .withNetworkMode("host");
   }
 
-  public Boolean isServiceHealthy(GenericContainer serviceContainer) {
+  public static Boolean isServiceHealthy(GenericContainer serviceContainer) {
     return serviceContainer.isRunning();
   }
 
-  public Boolean isServiceDead(GenericContainer serviceContainer) {
+  public static Boolean isServiceDead(GenericContainer serviceContainer) {
     return !serviceContainer.isRunning();
   }
 }
