@@ -1,5 +1,8 @@
 package soramitsu.irohautils.balancer
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.common.collect.ImmutableList
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
@@ -24,6 +27,8 @@ class ClientIntegrationTest {
     private val rmq = RabbitMqContainer()
 
     private val factory = ConnectionFactory()
+
+    private val objectMapper = ObjectMapper()
 
     private lateinit var connection: Connection
 
@@ -109,10 +114,10 @@ class ClientIntegrationTest {
         val amount = "1000"
         val precision = 2
 
-        val messagesArray = ArrayList<ByteArray>()
+        val messagesArrayReference = AtomicReference<ByteArray>()
         channel.basicConsume(LIST_TORII_QUEUE_NAME, true,
                 { _: String, delivery: Delivery ->
-                    messagesArray.add(delivery.body)
+                    messagesArrayReference.set(delivery.body)
                 },
                 { _ -> }
         )
@@ -126,33 +131,43 @@ class ClientIntegrationTest {
                 .build()
                 .build()
 
-        client.balanceToListTorii(
+        val batch = ImmutableList.copyOf(
                 Utils.createTxAtomicBatch(
                         listOf(transaction1, transaction2),
                         GenesisBlockBuilder.defaultKeyPair
                 )
         )
 
+        val batchTx1 = batch[0]
+        val batchTx2 = batch[1]
+
+        client.balanceToListTorii(batch)
+
         Thread.sleep(5000)
 
-        val receivedTransaction1 = TransactionOuterClass.Transaction.parseFrom(messagesArray[0])
-        val receivedTransaction2 = TransactionOuterClass.Transaction.parseFrom(messagesArray[1])
+        val typeRef = object : TypeReference<ArrayList<ByteArray>>() {}
 
-        assertEquals(transaction1.payload.reducedPayload.commandsCount, receivedTransaction1.payload.reducedPayload.commandsCount)
-        assertEquals(transaction1.payload.reducedPayload.createdTime, receivedTransaction1.payload.reducedPayload.createdTime)
-        assertEquals(transaction1.payload.reducedPayload.creatorAccountId, receivedTransaction1.payload.reducedPayload.creatorAccountId)
+        val transactionsList: ArrayList<ByteArray> = objectMapper.readValue(messagesArrayReference.get(), typeRef)
+        val receivedTransaction1 = TransactionOuterClass.Transaction.parseFrom(transactionsList[0])
+        val receivedTransaction2 = TransactionOuterClass.Transaction.parseFrom(transactionsList[1])
+
+        assertEquals(batchTx1.payload.batch, receivedTransaction1.payload.batch)
+        assertEquals(batchTx1.payload.reducedPayload.commandsCount, receivedTransaction1.payload.reducedPayload.commandsCount)
+        assertEquals(batchTx1.payload.reducedPayload.createdTime, receivedTransaction1.payload.reducedPayload.createdTime)
+        assertEquals(batchTx1.payload.reducedPayload.creatorAccountId, receivedTransaction1.payload.reducedPayload.creatorAccountId)
         val receivedCommand1 = receivedTransaction2.payload.reducedPayload.commandsList[0]
-        val expectedCommand1 = transaction2.payload.reducedPayload.commandsList[0]
+        val expectedCommand1 = batchTx1.payload.reducedPayload.commandsList[0]
         assertTrue(receivedCommand1.hasCreateAsset())
         assertEquals(expectedCommand1.createAsset.assetName, receivedCommand1.createAsset.assetName)
         assertEquals(expectedCommand1.createAsset.domainId, receivedCommand1.createAsset.domainId)
         assertEquals(expectedCommand1.createAsset.precision, receivedCommand1.addAssetQuantity.assetId)
 
-        assertEquals(transaction2.payload.reducedPayload.commandsCount, receivedTransaction2.payload.reducedPayload.commandsCount)
-        assertEquals(transaction2.payload.reducedPayload.createdTime, receivedTransaction2.payload.reducedPayload.createdTime)
-        assertEquals(transaction2.payload.reducedPayload.creatorAccountId, receivedTransaction2.payload.reducedPayload.creatorAccountId)
+        assertEquals(batchTx2.payload.batch, receivedTransaction2.payload.batch)
+        assertEquals(batchTx2.payload.reducedPayload.commandsCount, receivedTransaction2.payload.reducedPayload.commandsCount)
+        assertEquals(batchTx2.payload.reducedPayload.createdTime, receivedTransaction2.payload.reducedPayload.createdTime)
+        assertEquals(batchTx2.payload.reducedPayload.creatorAccountId, receivedTransaction2.payload.reducedPayload.creatorAccountId)
         val receivedCommand2 = receivedTransaction2.payload.reducedPayload.commandsList[0]
-        val expectedCommand2 = transaction2.payload.reducedPayload.commandsList[0]
+        val expectedCommand2 = batchTx2.payload.reducedPayload.commandsList[0]
         assertTrue(receivedCommand2.hasAddAssetQuantity())
         assertEquals(expectedCommand2.addAssetQuantity.amount, receivedCommand2.addAssetQuantity.amount)
         assertEquals(expectedCommand2.addAssetQuantity.assetId, receivedCommand2.addAssetQuantity.assetId)

@@ -77,7 +77,7 @@ class IntegrationTests {
                 .build()
                 .sign(defaultKeyPair)
                 .build()
-        
+
         client.balanceToTorii(transaction)
 
         val iroha = IrohaAPI(network.toriiAddresses[0])
