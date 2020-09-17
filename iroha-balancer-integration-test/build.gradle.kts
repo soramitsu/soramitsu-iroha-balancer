@@ -19,6 +19,7 @@ dependencies {
     testCompile("org.testcontainers:testcontainers:1.14.3")
     testImplementation("org.testcontainers:junit-jupiter:1.14.3")
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testCompile("org.junit.jupiter:junit-jupiter-engine:5.6.2")
 
     //Iroha libs
     testImplementation("com.github.hyperledger.iroha-java:client:6.2.0")
