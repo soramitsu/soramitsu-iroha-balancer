@@ -55,14 +55,9 @@ subprojects {
 		mavenCentral()
 	}
 
-	ext {
-		set('springCloudVersion', "Hoxton.SR6")
-	}
-
-
 	dependencyManagement {
 		imports {
-			mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+			mavenBom "org.springframework.cloud:spring-cloud-dependencies:${spring_cloud_version}"
 		}
 	}
 }

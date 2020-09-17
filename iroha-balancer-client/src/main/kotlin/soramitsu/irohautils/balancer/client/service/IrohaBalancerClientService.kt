@@ -10,13 +10,12 @@ import jp.co.soramitsu.iroha.java.Utils
 import mu.KLogging
 import soramitsu.irohautils.balancer.client.config.RMQConfig
 import java.io.Closeable
-import kotlin.system.exitProcess
 
 open class IrohaBalancerClientService @JvmOverloads constructor(
         val rmqConfig: RMQConfig,
         private val onRmqFail: () -> Unit = {
             logger.error { "RMQ failure. Exit." }
-            exitProcess(1)
+            throw ClientErrorException("RMQ has failed. Please, check settings and the error.")
         }
 ) : Closeable {
 
@@ -26,18 +25,15 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
 
     private val connection by lazy {
         if (rmqConfig.username != null && rmqConfig.password != null) {
-            logger.info { "Authenticate RMQ user: ${rmqConfig.username}" }
-            factory.username = rmqConfig.username
-            factory.password = rmqConfig.password
+            logger.error { "RMQ credentials are not provided" }
+            throw ClientErrorException("RMQ credentials are not provided. Please, check your settings.")
         }
+
+        factory.username = rmqConfig.username
+        factory.password = rmqConfig.password
 
         // Handle RMQ connection errors
         factory.exceptionHandler = object : DefaultExceptionHandler() {
-            override fun handleConnectionRecoveryException(conn: Connection, exception: Throwable) {
-                logger.error { "RMQ connection error: $exception" }
-                onRmqFail()
-            }
-
             override fun handleUnexpectedConnectionDriverException(conn: Connection, exception: Throwable) {
                 logger.error { "RMQ connection error: $exception" }
                 onRmqFail()
@@ -97,5 +93,20 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
         const val IROHA_BALANCER_EXCHANGER_NAME = "iroha-balancer"
         const val TORII_QUEUE_NAME = "torii"
         const val LIST_TORII_QUEUE_NAME = "list-torii"
+    }
+}
+
+class ClientErrorException : Exception {
+    lateinit var errorMessage: String
+    var extraMessage: String? = null
+        private set
+
+    constructor(errorMessage: String) : super("$errorMessage") {
+        this.errorMessage = errorMessage
+    }
+
+    constructor(errorMessage: String, extraMessage: String?) : super("$errorMessage") {
+        this.errorMessage = errorMessage
+        this.extraMessage = extraMessage
     }
 }

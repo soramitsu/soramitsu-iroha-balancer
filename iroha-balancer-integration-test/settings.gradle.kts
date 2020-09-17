@@ -1,1 +1,1 @@
-rootProject.name = "iroha-balancer-integration-test"
+//rootProject.name = "iroha-balancer-integration-test"

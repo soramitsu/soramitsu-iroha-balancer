@@ -7,7 +7,6 @@ plugins {
     kotlin("jvm") // version "1.3.72"
 }
 
-val camelVersion = "2.23.2"
 val irohaJavaVersion = "6.2.0"
 
 dependencies {
@@ -32,8 +31,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.+")
 
     // Iroha java library
-    implementation("com.github.hyperledger.iroha-java:client:${irohaJavaVersion}")
-    testImplementation("com.github.hyperledger.iroha-java:testcontainers:${irohaJavaVersion}")
+    implementation("com.github.hyperledger.iroha-java:client:$irohaJavaVersion")
+    testImplementation("com.github.hyperledger.iroha-java:testcontainers:$irohaJavaVersion")
 
 }
 
