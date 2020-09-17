@@ -24,7 +24,7 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
     private val objectMapper = ObjectMapper()
 
     private val connection by lazy {
-        if (rmqConfig.username != null && rmqConfig.password != null) {
+        if (rmqConfig.username == null || rmqConfig.password == null) {
             logger.error { "RMQ credentials are not provided" }
             throw ClientErrorException("RMQ credentials are not provided. Please, check your settings.")
         }
