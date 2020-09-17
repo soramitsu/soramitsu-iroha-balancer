@@ -1,1 +1,1 @@
-//rootProject.name = "iroha-balancer-client"
+rootProject.name = "iroha-balancer-client"
