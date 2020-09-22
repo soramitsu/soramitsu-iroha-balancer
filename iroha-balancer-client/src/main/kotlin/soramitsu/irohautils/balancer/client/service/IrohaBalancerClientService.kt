@@ -24,13 +24,10 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
     private val objectMapper = ObjectMapper()
 
     private val connection by lazy {
-        if (rmqConfig.username == null || rmqConfig.password == null) {
-            logger.error { "RMQ credentials are not provided" }
-            throw ClientErrorException("RMQ credentials are not provided. Please, check your settings.")
+        if (rmqConfig.username != null && rmqConfig.password != null) {
+            factory.username = rmqConfig.username
+            factory.password = rmqConfig.password
         }
-
-        factory.username = rmqConfig.username
-        factory.password = rmqConfig.password
 
         // Handle RMQ connection errors
         factory.exceptionHandler = object : DefaultExceptionHandler() {
@@ -97,16 +94,5 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
 }
 
 class ClientErrorException : Exception {
-    lateinit var errorMessage: String
-    var extraMessage: String? = null
-        private set
-
-    constructor(errorMessage: String) : super("$errorMessage") {
-        this.errorMessage = errorMessage
-    }
-
-    constructor(errorMessage: String, extraMessage: String?) : super("$errorMessage") {
-        this.errorMessage = errorMessage
-        this.extraMessage = extraMessage
-    }
+    constructor(errorMessage: String) : super("$errorMessage")
 }
