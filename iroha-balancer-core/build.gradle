@@ -64,7 +64,7 @@ springBoot {
 }
 
 soramitsu {
-	projectGroup = 'irohautils'
+	projectGroup = 'soramitsu'
 
 	docker {
 		// docker tag
