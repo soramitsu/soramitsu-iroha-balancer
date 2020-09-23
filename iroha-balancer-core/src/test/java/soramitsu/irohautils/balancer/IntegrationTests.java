@@ -116,7 +116,6 @@ public class IntegrationTests {
         checkCommitted(Utils.toHexHash(tx2));
     }
 
-
     private void checkCommitted(String trxHash1) {
         Endpoint.TxStatus txStatus = getTxStatus(trxHash1);
         while (COMMITTED != txStatus) {

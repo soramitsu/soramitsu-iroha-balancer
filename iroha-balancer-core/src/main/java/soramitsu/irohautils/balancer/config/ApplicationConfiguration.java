@@ -30,7 +30,4 @@ public class ApplicationConfiguration {
         }
         return irohaPeers;
     }
-
-
-
 }
