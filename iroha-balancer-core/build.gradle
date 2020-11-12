@@ -19,6 +19,7 @@ apply plugin: 'application'
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'org.springframework.boot'
+apply plugin: 'maven'
 
 dependencies {
 	implementation project(":iroha-balancer-client")
