@@ -5,6 +5,7 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 plugins {
     `java-library`
     kotlin("jvm") // version "1.3.72"
+    maven
 }
 
 val irohaJavaVersion = "6.2.0"
