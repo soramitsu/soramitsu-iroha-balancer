@@ -55,7 +55,7 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
     /**
      * This function sends Iroha transaction to RMQ of Iroha balancer
      */
-    fun balanceToTorii(transaction: TransactionOuterClass.Transaction) {
+    open fun balanceToTorii(transaction: TransactionOuterClass.Transaction) {
         logger.info { "Submitting transaction to balancer: ${Utils.toHexHash(transaction)}" }
         channel.basicPublish(
                 IROHA_BALANCER_EXCHANGER_NAME,
@@ -68,7 +68,7 @@ open class IrohaBalancerClientService @JvmOverloads constructor(
     /**
      * This function sends list of Iroha transactions to RMQ of Iroha balancer
      */
-    fun balanceToListTorii(transactions: Iterable<TransactionOuterClass.Transaction>) {
+    open fun balanceToListTorii(transactions: Iterable<TransactionOuterClass.Transaction>) {
         val byteListTorii = ArrayList(transactions
                 .map { it.toByteArray() }
         )
