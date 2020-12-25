@@ -54,8 +54,8 @@ class IntegrationTests {
         irohaBalancerCoreContainer
                 .withEnv("CAMEL_COMPONENT_RABBITMQ_HOSTNAME", rmqConfig.host)
                 .withEnv("CAMEL_COMPONENT_RABBITMQ_PORT_NUMBER", rmqConfig.port.toString())
-                .withEnv("CAMEL_COMPONENT_RABBITMQ_USERNAME", "guest")
-                .withEnv("CAMEL_COMPONENT_RABBITMQ_PASSWORD", "guest")
+                .withEnv("CAMEL_COMPONENT_RABBITMQ_USERNAME", rmqConfig.username)
+                .withEnv("CAMEL_COMPONENT_RABBITMQ_PASSWORD", rmqConfig.password)
                 .withEnv("IROHA_PEERS", TestContainersMock.getPeerAddresses())
                 .waitingFor(Wait.forLogMessage(".*Started IrohaBalancerApplication.*", 1))
                 .start()

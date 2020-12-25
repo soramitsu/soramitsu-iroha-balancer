@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class IrohaBalancerRoute extends RouteBuilder {
 
-    public static final String AMQP_COMMON = "&exchangeType=topic&durable=true&autoDelete=false&username=guest&password=guest&declare=true";
+    public static final String AMQP_COMMON = "&exchangeType=topic&durable=true&autoDelete=false&declare=true";
 
     public static final String RABBITMQ_BALANCE_TO_TORII = "rabbitmq:iroha-balancer?queue=torii&routingKey=torii" + AMQP_COMMON;
     public static final String RABBITMQ_BALANCE_TO_LIST_TORII = "rabbitmq:iroha-balancer?queue=list-torii&routingKey=list-torii" + AMQP_COMMON;
