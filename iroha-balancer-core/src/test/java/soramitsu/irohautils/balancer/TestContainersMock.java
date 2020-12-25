@@ -21,12 +21,16 @@ public class TestContainersMock {
 
     public static void start(){
         if (!rabbitmq.isRunning()) {
-            rabbitmq.start();
+            var username = "testUser";
+            var password = "testPassword";
+            rabbitmq.withEnv("RABBITMQ_DEFAULT_USER", username)
+                    .withEnv("RABBITMQ_DEFAULT_PASS", password)
+                    .start();
             rmqConfig = new RMQConfig(
                     rabbitmq.getContainerIpAddress(),
                     rabbitmq.getMappedPort(5672),
-                    "guest",
-                    "guest"
+                    username,
+                    password
             );
         }
 
