@@ -5,9 +5,11 @@ import iroha.protocol.Endpoint;
 import iroha.protocol.TransactionOuterClass;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.rabbitmq.RabbitMQConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import soramitsu.irohautils.balancer.loadtest.AccountService;
 import soramitsu.irohautils.balancer.service.IrohaService;
 
 import java.net.URI;
@@ -25,13 +27,14 @@ public class IrohaBalancerRoute extends RouteBuilder {
 
 
     private final IrohaService irohaService;
+    private final AccountService accountService;
     private String[] toriiUris;
     private String[] listToriiUris;
 
     @Autowired
     private CamelContext camelContext;
 
-    public IrohaBalancerRoute(IrohaService irohaService) {
+    public IrohaBalancerRoute(IrohaService irohaService, AccountService accountService) {
         this.irohaService = irohaService;
         toriiUris = irohaService.getIrohaPeers().values()
                 .stream()
@@ -42,6 +45,7 @@ public class IrohaBalancerRoute extends RouteBuilder {
                 .map(irohaAPI -> irohaAPI.getUri().toString() + "/iroha.protocol.CommandService_v1?method=listTorii&synchronous=false")
                 .toArray(String[]::new);
 
+        this.accountService = accountService;
     }
     private static class ByteArrayList extends ArrayList<byte[]> {}
 
@@ -94,5 +98,16 @@ public class IrohaBalancerRoute extends RouteBuilder {
                 .to(listToriiUris)
                 .end()
                 .to("mock:listToriiUris");
+
+        from("timer://runOnce?repeatCount=1&delay=5000")
+                .process(exchange -> {
+                    new Thread(() -> {
+                        try {
+                            accountService.init();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).run();
+                });
     }
 }

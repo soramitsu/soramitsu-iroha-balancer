@@ -3,6 +3,7 @@ package soramitsu.irohautils.balancer.loadtest;
 import iroha.protocol.TransactionOuterClass;
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3;
 import jp.co.soramitsu.iroha.java.Transaction;
+import jp.co.soramitsu.iroha.java.Utils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.rabbitmq.RabbitMQConstants;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -55,8 +58,7 @@ public class AccountService {
         }
     }
 
-    @PostConstruct
-    public void init() throws IOException {
+    public void init() throws Exception {
         Resource resource = resourceLoader.getResource("classpath:data/bakong_public_bank_users_tst2.csv");
         BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()));
         String line;
@@ -65,12 +67,11 @@ public class AccountService {
             accountKeyPairList.add(new AccountKeyPair(values[0],values[1],values[2]));
         }
         log.info("Read {} accounts",accountKeyPairList.size());
+        runTest();
     }
 
     public void runTest() throws Exception { //TODO......
         Random random = new Random();
-
-
 
         while (true) {
 
@@ -91,12 +92,15 @@ public class AccountService {
                     .setQuorum(1)
                     .sign(sender.getKeyPair())
                     .build();
+            log.info("Send trx {}", Utils.toHexHash(tx));
             sendTransaction(tx.toByteArray());
+            Thread.sleep(1000);
 
         }
     }
 
     public void sendTransaction(byte[] tx) {
+
         producerTemplate.send(RABBITMQ_TRANSACTIONS_PRODUCER, exchange -> {
             exchange.getMessage().setBody(tx);
             exchange.getMessage().setHeader(RabbitMQConstants.ROUTING_KEY, TORII_ROUTING_KEY);
