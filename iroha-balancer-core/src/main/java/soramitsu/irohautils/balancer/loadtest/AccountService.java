@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Random;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
+import static soramitsu.irohautils.balancer.routes.IrohaBalancerRoute.DIRECT_TIMEOUT_Q;
 
 @Service
 @Slf4j
@@ -57,8 +58,8 @@ public class AccountService {
             );
         }
     }
-
-    public void init() throws Exception {
+    @PostConstruct
+    public void readAccounts() throws IOException {
         Resource resource = resourceLoader.getResource("classpath:data/bakong_public_bank_users_tst2.csv");
         BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()));
         String line;
@@ -67,13 +68,17 @@ public class AccountService {
             accountKeyPairList.add(new AccountKeyPair(values[0],values[1],values[2]));
         }
         log.info("Read {} accounts",accountKeyPairList.size());
+    }
+
+    public void init() throws Exception {
+
         runTest();
     }
 
     public void runTest() throws Exception { //TODO......
         Random random = new Random();
 
-        while (true) {
+        for (int i = 0; i < 500; i++) {
 
             AccountKeyPair sender = accountKeyPairList.get(random.nextInt(accountKeyPairList.size()));
             AccountKeyPair receiver = accountKeyPairList.get(random.nextInt(accountKeyPairList.size()));
@@ -92,11 +97,13 @@ public class AccountService {
                     .setQuorum(1)
                     .sign(sender.getKeyPair())
                     .build();
-            log.info("Send trx {}", Utils.toHexHash(tx));
             sendTransaction(tx.toByteArray());
-            Thread.sleep(1000);
 
         }
+        log.info("Transactions generation done");
+        producerTemplate.send(DIRECT_TIMEOUT_Q, exchange -> {
+            exchange.getIn().setBody(1);
+        });
     }
 
     public void sendTransaction(byte[] tx) {
